@@ -43,9 +43,6 @@ export const App = () => {
         setImages(prevImages => [...prevImages, ...hits]);
         setLoading(false);
         setTotalImage(totalHits);
-        console.log(images);
-        console.log(loading);
-        console.log(totalImage);
 
         if (!successDislayedMessage) {
           toast.success(`Hooray! We found ${totalImage} images.`);
