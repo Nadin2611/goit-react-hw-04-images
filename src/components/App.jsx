@@ -16,7 +16,6 @@ export const App = () => {
   const [loading, setLoading] = useState(false);
   const [largeImage, setLargeImage] = useState(null);
   const [totalImage, setTotalImage] = useState(0);
-  const [successDislayedMessage, setSuccessDislayedMessage] = useState(false);
 
   useEffect(() => {
     if (!searchValue) {
@@ -44,9 +43,8 @@ export const App = () => {
         setLoading(false);
         setTotalImage(totalHits);
 
-        if (!successDislayedMessage) {
-          toast.success(`Hooray! We found ${totalImage} images.`);
-          setSuccessDislayedMessage(true);
+        if (page === 1) {
+          toast.success(`Hooray! We found ${totalHits} images.`);
         }
       } catch (error) {
         if (error.response.status === 404) {
@@ -68,7 +66,7 @@ export const App = () => {
     setSearchValue(formValue);
     setPage(1);
   };
-  const handleLoadMore = () => setPage(prevPage => prevPage.page + 1);
+  const handleLoadMore = () => setPage(prevPage => prevPage + 1);
   const handleClickImage = largeImage => setLargeImage(largeImage);
   const handleCloseModal = () => setLargeImage(null);
 
