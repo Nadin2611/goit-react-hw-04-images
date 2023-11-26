@@ -22,50 +22,50 @@ export const App = () => {
     if (!searchValue) {
       return;
     }
+    const fetchData = async () => {
+      setLoading(true);
+
+      try {
+        const { hits, totalHits } = await getImage(searchValue, page);
+
+        if (hits.length === 0) {
+          toast.warn(
+            `Sorry, there are no images matching your search query. Please try again.`
+          );
+          return;
+        }
+
+        if (page === Math.ceil(totalHits / 12)) {
+          toast.info(
+            `We're sorry, but you've reached the end of search results.`
+          );
+        }
+        setImages(prevImages => [...prevImages, ...hits]);
+        setLoading(false);
+        setTotalImage(totalHits);
+        console.log(images);
+        console.log(loading);
+        console.log(totalImage);
+
+        if (!successDislayedMessage) {
+          toast.success(`Hooray! We found ${totalImage} images.`);
+          setSuccessDislayedMessage(true);
+        }
+      } catch (error) {
+        if (error.response.status === 404) {
+          toast.error(`Not Found!`, error);
+        }
+        if (error.response.status === 400) {
+          toast.error(`Bad Request!`, error);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchData();
   }, [searchValue, page]);
 
-  const fetchData = async () => {
-    setLoading(true);
-
-    try {
-      const { hits, totalHits } = await getImage(searchValue, page);
-
-      if (hits.length === 0) {
-        toast.warn(
-          `Sorry, there are no images matching your search query. Please try again.`
-        );
-        return;
-      }
-
-      if (page === Math.ceil(totalHits / 12)) {
-        toast.info(
-          `We're sorry, but you've reached the end of search results.`
-        );
-      }
-      setImages(prevImages => [...prevImages, ...hits]);
-      setLoading(false);
-      setTotalImage(totalHits);
-      console.log(images);
-      console.log(loading);
-      console.log(totalImage);
-
-      if (!successDislayedMessage) {
-        toast.success(`Hooray! We found ${totalImage} images.`);
-        setSuccessDislayedMessage(true);
-      }
-    } catch (error) {
-      if (error.response.status === 404) {
-        toast.error(`Not Found!`, error);
-      }
-      if (error.response.status === 400) {
-        toast.error(`Bad Request!`, error);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
   const handleSearchValue = formValue => {
     setImages([]);
     setSearchValue(formValue);
