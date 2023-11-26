@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -9,29 +9,25 @@ import { Loader } from './Loader/Loader';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { getImage } from 'service/image-service';
 
-export class App extends Component {
-  state = {
-    images: [],
-    searchValue: '',
-    page: 1,
-    loading: false,
-    largeImage: null,
-    showModal: false,
-    totalImage: 0,
-    successDislayedMessage: false,
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [searchValue, setSearchValue] = useState('');
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [largeImage, setLargeImage] = useState(null);
+  const [totalImage, setTotalImage] = useState(0);
+  const [successDislayedMessage, setSuccessDislayedMessage] = useState(false);
 
-  componentDidUpdate(_, prevState) {
-    const { page, searchValue } = this.state;
-
-    if (searchValue !== prevState.searchValue || page !== prevState.page) {
-      this.fetchData();
+  useEffect(() => {
+    if (!searchValue) {
+      return;
     }
-  }
 
-  fetchData = async () => {
-    const { searchValue, page, successDislayedMessage } = this.state;
-    this.setState({ loading: true });
+    fetchData();
+  }, [searchValue, page]);
+
+  const fetchData = async () => {
+    setLoading(true);
 
     try {
       const { hits, totalHits } = await getImage(searchValue, page);
@@ -48,20 +44,17 @@ export class App extends Component {
           `We're sorry, but you've reached the end of search results.`
         );
       }
+      setImages(prevImages => [...prevImages, ...hits]);
+      setLoading(false);
+      setTotalImage(totalHits);
+      console.log(images);
+      console.log(loading);
+      console.log(totalImage);
 
-      this.setState(
-        prevState => ({
-          images: [...prevState.images, ...hits],
-          loading: false,
-          totalImage: totalHits,
-        }),
-        () => {
-          if (!successDislayedMessage) {
-            toast.success(`Hooray! We found ${this.state.totalImage} images.`);
-            this.setState({ successDislayedMessage: true });
-          }
-        }
-      );
+      if (!successDislayedMessage) {
+        toast.success(`Hooray! We found ${totalImage} images.`);
+        setSuccessDislayedMessage(true);
+      }
     } catch (error) {
       if (error.response.status === 404) {
         toast.error(`Not Found!`, error);
@@ -70,56 +63,46 @@ export class App extends Component {
         toast.error(`Bad Request!`, error);
       }
     } finally {
-      this.setState({ loading: false });
+      setLoading(false);
     }
   };
-
-  handleSearchValue = formValue => {
-    this.setState({ images: [], searchValue: formValue, page: 1 });
+  const handleSearchValue = formValue => {
+    setImages([]);
+    setSearchValue(formValue);
+    setPage(1);
   };
+  const handleLoadMore = () => setPage(prevPage => prevPage.page + 1);
+  const handleClickImage = largeImage => setLargeImage(largeImage);
+  const handleCloseModal = () => setLargeImage(null);
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-  };
+  return (
+    <>
+      <SearchBar onGetSearchValue={handleSearchValue}></SearchBar>
 
-  handleClickImage = largeImage => {
-    // console.log('Click!');
-    // console.log(largeImage);
-    this.setState({ largeImage });
-  };
+      <ImageGallery
+        images={images}
+        onClick={selectedImage => {
+          handleClickImage(selectedImage);
+        }}
+      ></ImageGallery>
 
-  handleCloseModal = () => {
-    this.setState({ largeImage: null });
-  };
+      {loading && <Loader />}
 
-  render() {
-    const { images, loading, largeImage, totalImage } = this.state;
+      {totalImage > images.length && !loading && (
+        <Button onClick={handleLoadMore} />
+      )}
 
-    return (
-      <>
-        <SearchBar onGetSearchValue={this.handleSearchValue}></SearchBar>
+      {largeImage && <Modal imageURL={largeImage} onClose={handleCloseModal} />}
 
-        <ImageGallery
-          images={images}
-          onClick={selectedImage => {
-            this.handleClickImage(selectedImage);
-          }}
-        ></ImageGallery>
+      <ToastContainer />
+    </>
+  );
+};
 
-        {loading && <Loader />}
+// componentDidUpdate(_, prevState) {
+//   const { page, searchValue } = this.state;
 
-        {totalImage > images.length && !loading && (
-          <Button onClick={this.handleLoadMore} />
-        )}
-
-        {largeImage && (
-          <Modal imageURL={largeImage} onClose={this.handleCloseModal} />
-        )}
-
-        <ToastContainer />
-      </>
-    );
-  }
-}
+//   if (searchValue !== prevState.searchValue || page !== prevState.page) {
+//     this.fetchData();
+//   }
+// }
