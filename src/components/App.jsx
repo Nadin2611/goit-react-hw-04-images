@@ -93,11 +93,3 @@ export const App = () => {
     </>
   );
 };
-
-// componentDidUpdate(_, prevState) {
-//   const { page, searchValue } = this.state;
-
-//   if (searchValue !== prevState.searchValue || page !== prevState.page) {
-//     this.fetchData();
-//   }
-// }
